@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lzx.mapper.MenuMapper">
+
+    <select id="getPermissionsByUserId" resultType="String">
+        SELECT DISTINCT m.`perms`
+        FROM `sys_user_role` ur
+                 LEFT JOIN `sys_role_menu` rm ON ur.`role_id` = rm.`role_id`
+                 LEFT JOIN `sys_menu` m ON m.`id` = rm.`menu_id`
+        WHERE ur.`user_id` = #{id}
+          AND m.`status` = 0
+          AND m.`menu_type` in ('C', 'F')
+          AND m.`del_flag` = 0
+    </select>
+    <select id="getAllRouters" resultType="com.lzx.domain.entity.Menu">
+        SELECT
+            id, component, create_time, icon, menu_name, menu_type, order_num, parent_id, path, perms, `status`, visible
+        FROM `sys_menu`
+        WHERE `menu_type` in ('C', 'M')
+          AND `status` = 0
+          AND `del_flag` = 0
+    </select>
+    <select id="getRoutersByAdminId" resultType="com.lzx.domain.entity.Menu">
+        SELECT DISTINCT
+            id, component, create_time, icon, menu_name, menu_type, order_num, parent_id, path, perms, `status`, visible
+        FROM `sys_user_role` ur
+                 LEFT JOIN `sys_role_menu` rm ON ur.`role_id` = rm.`role_id`
+                 LEFT JOIN `sys_menu` m ON m.`id` = rm.`menu_id`
+        WHERE ur.`user_id` = #{id}
+          AND m.`status` = 0
+          AND m.`menu_type` in ('C', 'M')
+          AND m.`del_flag` = 0
+    </select>
+    <select id="getMenuIdByRoleId" resultType="java.lang.Long">
+        SELECT menu_id
+        FROM `sys_role_menu`
+        WHERE role_id = #{id}
+    </select>
+</mapper>

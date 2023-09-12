@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lzx.mapper.ArticleMapper">
+    <insert id="insertArticleTagRelation">
+        INSERT INTO lzx_article_tag(article_id, tag_id)
+            values
+                <foreach collection="tags" index="index" item="Tag" open="" close="" separator=",">
+                    (#{articleId}, #{Tag})
+                </foreach>
+
+    </insert>
+    <delete id="deleteOldArticleTagRelationById">
+        DELETE
+        FROM `lzx_article_tag`
+        WHERE article_id = #{id}
+    </delete>
+    <select id="getTagById" resultType="java.lang.Long">
+        SELECT tag_id
+        FROM `lzx_article_tag`
+        WHERE article_id = #{id}
+    </select>
+</mapper>
