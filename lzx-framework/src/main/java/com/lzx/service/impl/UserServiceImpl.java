@@ -181,6 +181,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public ResponseResult deleteUserById(Long id) {
         removeById(id);
+        getBaseMapper().deleteUserRole(id);
         return ResponseResult.okResult();
     }
 
