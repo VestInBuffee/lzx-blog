@@ -1,5 +1,6 @@
 package com.lzx.domain.vo;
 
+import com.alibaba.fastjson.annotation.JSONField;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,6 +16,9 @@ public class ArticleListVo {
     private String title;
     //摘要
     private String summary;
+    //所属分类id
+    @JSONField(name = "class_id")
+    private Long categoryId;
     //所属分类名
     private String categoryName;
     //缩略图
