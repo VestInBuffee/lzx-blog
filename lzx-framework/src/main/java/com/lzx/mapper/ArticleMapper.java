@@ -10,7 +10,7 @@ public interface ArticleMapper extends BaseMapper<Article> {
     void insertArticleTagRelation(@Param("articleId")Long id,
                                   @Param("tags")List<Long> tags);
 
-    List<Long> getTagById(@Param("id")Long id);
+    List<Long> getTagIdByArticleId(@Param("id")Long id);
 
 //    void updateArticleTag(@Param("id")Long id, @Param("tags")List<Long> tags);
 

@@ -22,8 +22,8 @@ public class ArticleController {
         return articleService.queryArticle(pageNum, pageSize, queryArticleDto);
     }
     @GetMapping("{id}")
-    public ResponseResult getArticleWithTagById(@PathVariable("id") Long id){
-        return articleService.getArticleWithTagById(id);
+    public ResponseResult getArticleWithTagByArticleId(@PathVariable("id") Long id){
+        return articleService.getArticleWithTagByArticleId(id);
     }
     @PutMapping
     public ResponseResult updateArticle(@RequestBody Article article){

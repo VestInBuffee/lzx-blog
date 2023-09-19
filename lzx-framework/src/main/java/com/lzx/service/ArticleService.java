@@ -18,7 +18,7 @@ public interface ArticleService extends IService<Article> {
 
     ResponseResult queryArticle(Integer pageNum, Integer pageSize, QueryArticleDto queryArticleDto);
 
-    ResponseResult getArticleWithTagById(Long id);
+    ResponseResult getArticleWithTagByArticleId(Long id);
 
     ResponseResult updateArticle(Article article);
 

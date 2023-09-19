@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.lzx.domain.ResponseResult;
 import com.lzx.domain.entity.Tag;
 
+import java.util.List;
+
 /**
  * 标签(Tag)表服务接口
  *
@@ -25,5 +27,7 @@ public interface TagService extends IService<Tag> {
     ResponseResult updateTag(Tag tag);
 
     ResponseResult listAllTag();
+
+    List<Long> getArticleTagByArticleId(Long id);
 }
 

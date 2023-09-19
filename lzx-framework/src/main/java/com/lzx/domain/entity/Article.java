@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.lzx.domain.dto.TagArticleDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -37,9 +38,10 @@ public class Article {
     //所属分类名字
     @TableField(exist = false)
     private String categoryName;
-    //博文标签
+    //TagList
     @TableField(exist = false)
-    private List<Long> tags;
+    private List<TagArticleDto> tagList;
+
     //缩略图
     private String thumbnail;
     //是否置顶（0否，1是）

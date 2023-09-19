@@ -6,12 +6,15 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lzx.constants.SystemConstants;
 import com.lzx.domain.ResponseResult;
 import com.lzx.domain.dto.QueryArticleDto;
+import com.lzx.domain.dto.TagArticleDto;
 import com.lzx.domain.entity.Article;
 import com.lzx.domain.entity.Category;
+import com.lzx.domain.entity.Tag;
 import com.lzx.domain.vo.*;
 import com.lzx.mapper.ArticleMapper;
 import com.lzx.service.ArticleService;
 import com.lzx.service.CategoryService;
+import com.lzx.service.TagService;
 import com.lzx.utils.BeanCopyUtils;
 import com.lzx.utils.RedisCache;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +39,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Autowired
     private RedisCache redisCache;
+
+    @Autowired
+    private TagService tagService;
 
     @Override
     public ResponseResult hotArticleList() {
@@ -67,7 +73,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         //1.3对是否置顶进行排序
         lambdaQueryWrapper.orderByDesc(Article::getIsTop);
 
-        //2.查询指定页面的article，查找到categoryName
+        //2.查询指定页面的article，查找到categoryName和tag
         //2.1查询指定页面的article
         Page<Article> page = new Page<>(pageNum, pageSize);
         page(page, lambdaQueryWrapper);
@@ -80,6 +86,14 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                                 categoryService.getById(
                                         article.getCategoryId()).getName()))
                         .collect(Collectors.toList());
+        //2.3 Tag
+        List<Article> articleWithCategoryNameAndTagList =
+                articleWithCategoryNameList.stream().
+                        peek(article -> {
+//                            article.setTags(
+//                                    tagService.getArticleTagByArticleId(article.getId()));
+//                            article.setTagName(tagService.getTagNameByTagIds());
+                        }).collect(Collectors.toList());
 
         //3.将article封装成articleVo,然后封装成pagevo
         List<ArticleListVo> articleListVos = BeanCopyUtils.copyBeanList(
@@ -121,7 +135,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         //更新article表
         save(article);
         //更新article_tag表
-        getBaseMapper().insertArticleTagRelation(article.getId(), article.getTags());
+        getBaseMapper().insertArticleTagRelation(article.getId(),
+                article.getTagList().stream()
+                        .map(TagArticleDto::getId).collect(Collectors.toList()));
         return ResponseResult.okResult();
     }
 
@@ -146,10 +162,15 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     }
 
     @Override
-    public ResponseResult getArticleWithTagById(Long id) {
+    public ResponseResult getArticleWithTagByArticleId(Long id) {
         Article article = getById(id);
-        List<Long> tags = getBaseMapper().getTagById(id);
-        article.setTags(tags);
+        List<Long> tagIds = getBaseMapper().getTagIdByArticleId(id);
+        List<Tag> tags = tagService.listByIds(tagIds);
+
+        List<TagArticleDto> tagArticleDtos =
+                BeanCopyUtils.copyBeanList(tags, TagArticleDto.class);
+
+        article.setTagList(tagArticleDtos);
         return ResponseResult.okResult(article);
     }
 
@@ -161,7 +182,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         //2.1删除旧关系
         getBaseMapper().deleteOldArticleTagRelationById(article.getId());
         //2.2添加新关系
-        getBaseMapper().insertArticleTagRelation(article.getId(), article.getTags());
+        getBaseMapper().insertArticleTagRelation(article.getId(),
+                article.getTagList().stream()
+                    .map(TagArticleDto::getId).collect(Collectors.toList()));
         return ResponseResult.okResult();
     }
 

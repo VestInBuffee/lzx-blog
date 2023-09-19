@@ -1,11 +1,13 @@
 package com.lzx.domain.vo;
 
 import com.alibaba.fastjson.annotation.JSONField;
+import com.lzx.domain.dto.TagArticleDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -16,6 +18,8 @@ public class ArticleListVo {
     private String title;
     //摘要
     private String summary;
+    //标签
+    private List<TagArticleDto> tagList;
     //所属分类id
     @JSONField(name = "class_id")
     private Long categoryId;
