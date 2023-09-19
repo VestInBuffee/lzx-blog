@@ -15,4 +15,6 @@ public interface ArticleMapper extends BaseMapper<Article> {
 //    void updateArticleTag(@Param("id")Long id, @Param("tags")List<Long> tags);
 
     void deleteOldArticleTagRelationById(@Param("id")Long id);
+
+    List<Long> getArticleIdByTagId(Long tagId);
 }

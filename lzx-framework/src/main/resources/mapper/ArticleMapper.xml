@@ -19,4 +19,9 @@
         FROM `lzx_article_tag`
         WHERE article_id = #{id}
     </select>
+    <select id="getArticleIdByTagId" resultType="java.lang.Long">
+        SELECT article_id
+        FROM `lzx_article_tag`
+        WHERE tag_id = #{tagId}
+    </select>
 </mapper>

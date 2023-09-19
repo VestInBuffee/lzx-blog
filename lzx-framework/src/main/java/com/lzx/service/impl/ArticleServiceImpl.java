@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lzx.constants.SystemConstants;
 import com.lzx.domain.ResponseResult;
+import com.lzx.domain.dto.ArticleListDto;
 import com.lzx.domain.dto.QueryArticleDto;
 import com.lzx.domain.dto.TagArticleDto;
 import com.lzx.domain.entity.Article;
@@ -62,12 +63,19 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     }
 
     @Override
-    public ResponseResult articleList(Integer pageNum, Integer pageSize, Long categoryId) {
+    public ResponseResult articleList(Integer pageNum, Integer pageSize, ArticleListDto articleListDto) {
         //1.获取到article
         LambdaQueryWrapper<Article> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         //1.1是否传入正确地categoryId
-        lambdaQueryWrapper.eq(Objects.nonNull(categoryId) && categoryId>0,
+        Long categoryId = articleListDto.getCategoryId();
+        lambdaQueryWrapper.eq(Objects.nonNull(categoryId) && categoryId >0,
                 Article::getCategoryId, categoryId);
+        //1.?是否传入正确地tagId
+        Long tagId = articleListDto.getTagId();
+        if(Objects.nonNull(tagId) && tagId >0) {
+            List<Long> articleIds = getArticleIdByTagId(tagId);
+            lambdaQueryWrapper.in(articleIds.size() > 0, Article::getId, articleIds);
+        }
         //1.2必须是已发布的文章
         lambdaQueryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
         //1.3对是否置顶进行排序
@@ -91,16 +99,30 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                 articleWithCategoryNameList.stream().
                         peek(article -> {
                             article.setTagList(
-                                    tagService.getTagListByArticleId(article.getId()));
+                                    getTagListByArticleId(article.getId()));
                         }).collect(Collectors.toList());
 
         //3.将article封装成articleVo,然后封装成pagevo
         List<ArticleListVo> articleListVos = BeanCopyUtils.copyBeanList(
-                articleWithCategoryNameList, ArticleListVo.class);
+                articleWithCategoryNameAndTagList, ArticleListVo.class);
         PageVo pageVo = new PageVo(articleListVos, page.getTotal());
 
         //4.返回pageVo
         return ResponseResult.okResult(pageVo);
+    }
+
+    private List<Long> getArticleIdByTagId(Long tagId) {
+        return getBaseMapper().getArticleIdByTagId(tagId);
+    }
+
+    public List<TagArticleDto> getTagListByArticleId(Long id) {
+        List<Long> tagIds = getBaseMapper().getTagIdByArticleId(id);
+        List<TagArticleDto> tagArticleDtos = null;
+        if(tagIds.size() > 0){
+            List<Tag> tags = tagService.listByIds(tagIds);
+            tagArticleDtos = BeanCopyUtils.copyBeanList(tags, TagArticleDto.class);
+        }
+        return tagArticleDtos;
     }
 
     @Override
@@ -163,12 +185,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     @Override
     public ResponseResult getArticleWithTagByArticleId(Long id) {
         Article article = getById(id);
-        List<Long> tagIds = getBaseMapper().getTagIdByArticleId(id);
-        List<Tag> tags = tagService.listByIds(tagIds);
-
-        List<TagArticleDto> tagArticleDtos =
-                BeanCopyUtils.copyBeanList(tags, TagArticleDto.class);
-
+        List<TagArticleDto> tagArticleDtos = getTagListByArticleId(id);
         article.setTagList(tagArticleDtos);
         return ResponseResult.okResult(article);
     }

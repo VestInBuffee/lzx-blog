@@ -1,8 +1,10 @@
 package com.lzx.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+
 import com.lzx.domain.ResponseResult;
+import com.lzx.domain.dto.ArticleListDto;
 import com.lzx.domain.entity.Article;
+
 import com.lzx.service.ArticleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -30,8 +32,8 @@ public class ArticleController {
     }
 
     @GetMapping("/articleList")
-    public ResponseResult articleList(Integer pageNum, Integer pageSize, Long categoryId){
-        return articleService.articleList(pageNum, pageSize, categoryId);
+    public ResponseResult articleList(Integer pageNum, Integer pageSize, ArticleListDto articleListDto){
+        return articleService.articleList(pageNum, pageSize, articleListDto);
     }
 
     @GetMapping("/{id}")
