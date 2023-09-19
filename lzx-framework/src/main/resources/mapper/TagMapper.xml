@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.lzx.mapper.TagMapper">
 
-    <select id="getArticleTagByArticleId" resultType="java.lang.Long">
+    <select id="getTagIdByArticleId" resultType="java.lang.Long">
         SELECT `tag_id`
         FROM `lzx_article_tag`
         WHERE `article_id` = #{articleId}

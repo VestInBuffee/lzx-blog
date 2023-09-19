@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lzx.domain.ResponseResult;
+import com.lzx.domain.dto.TagArticleDto;
 import com.lzx.domain.entity.Tag;
 
 import com.lzx.domain.vo.PageVo;
@@ -86,10 +87,22 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
     }
 
     @Override
-    public List<Long> getArticleTagByArticleId(Long id) {
-        List<Long> articleTags =
-                getBaseMapper().getArticleTagByArticleId(id);
-        return articleTags;
+    public List<Long> getTagIdByArticleId(Long id) {
+        List<Long> tagIds =
+                getBaseMapper().getTagIdByArticleId(id);
+        return tagIds;
+    }
+
+    @Override
+    public List<TagArticleDto> getTagListByArticleId(Long id) {
+        List<Long> tagIds = getTagIdByArticleId(id);
+        List<TagArticleDto> tagArticleDtos = null;
+        if(0 != tagIds.size()){
+            List<Tag> tagList = listByIds(tagIds);
+            tagArticleDtos = BeanCopyUtils.copyBeanList(tagList,
+                    TagArticleDto.class);
+        }
+        return tagArticleDtos;
     }
 }
 

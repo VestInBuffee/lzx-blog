@@ -2,6 +2,7 @@ package com.lzx.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.lzx.domain.ResponseResult;
+import com.lzx.domain.dto.TagArticleDto;
 import com.lzx.domain.entity.Tag;
 
 import java.util.List;
@@ -28,6 +29,8 @@ public interface TagService extends IService<Tag> {
 
     ResponseResult listAllTag();
 
-    List<Long> getArticleTagByArticleId(Long id);
+    List<Long> getTagIdByArticleId(Long id);
+
+    List<TagArticleDto> getTagListByArticleId(Long id);
 }
 

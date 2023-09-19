@@ -90,9 +90,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         List<Article> articleWithCategoryNameAndTagList =
                 articleWithCategoryNameList.stream().
                         peek(article -> {
-//                            article.setTags(
-//                                    tagService.getArticleTagByArticleId(article.getId()));
-//                            article.setTagName(tagService.getTagNameByTagIds());
+                            article.setTagList(
+                                    tagService.getTagListByArticleId(article.getId()));
                         }).collect(Collectors.toList());
 
         //3.将article封装成articleVo,然后封装成pagevo
