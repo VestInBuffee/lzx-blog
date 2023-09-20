@@ -89,9 +89,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         return commentVos.stream()
                 .peek(commentVo -> {
                     //1.查询到昵称
-                    String nickName = userService.
-                            getById(commentVo.getCreateBy()).getNickName();
-                    commentVo.setUsername(nickName);
+                    if(!commentVo.getCreateBy().equals(-1L)){
+                        String nickName = userService.
+                                getById(commentVo.getCreateBy()).getNickName();
+                        commentVo.setUsername(nickName);
+                    }
                     //2.给评论对象昵称赋值
                     Long commentUserId;
                     if(-1 != (commentUserId = commentVo.getToCommentUserId())){
