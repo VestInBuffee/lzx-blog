@@ -139,6 +139,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         //查找到CategoryName
         Category category = categoryService.getById(articleDetailVo.getCategoryId());
         articleDetailVo.setCategoryName(category.getName());
+        //查找到tag
+        List<TagArticleDto> tagArticleDtoList = getTagListByArticleId(id);
+        articleDetailVo.setTagList(tagArticleDtoList);
         //返回结果
         return ResponseResult.okResult(articleDetailVo);
     }

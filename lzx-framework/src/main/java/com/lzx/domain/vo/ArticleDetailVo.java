@@ -1,10 +1,12 @@
 package com.lzx.domain.vo;
 
+import com.lzx.domain.dto.TagArticleDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -19,6 +21,8 @@ public class ArticleDetailVo {
     private Long categoryId;
     //所属分类名
     private String categoryName;
+    //tagList
+    private List<TagArticleDto> tagList;
     //缩略图
     private String thumbnail;
     //浏览量
