@@ -76,6 +76,10 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             List<Long> articleIds = getArticleIdByTagId(tagId);
             lambdaQueryWrapper.in(articleIds.size() > 0, Article::getId, articleIds);
         }
+        //1.?是否正确传入queryContent
+        String queryContent = articleListDto.getQueryContent();
+        lambdaQueryWrapper.like(StringUtils.hasText(queryContent),
+                Article::getContent, queryContent);
         //1.2必须是已发布的文章
         lambdaQueryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
         //1.3对是否置顶进行排序
