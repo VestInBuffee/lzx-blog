@@ -7,9 +7,11 @@ import com.lzx.domain.entity.Article;
 
 import com.lzx.service.ArticleService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author lzx
@@ -33,7 +35,23 @@ public class ArticleController {
 
     @GetMapping("/articleList")
     public ResponseResult articleList(Integer pageNum, Integer pageSize, ArticleListDto articleListDto){
-        return articleService.articleList(pageNum, pageSize, articleListDto);
+        // 根据类别进行查询
+        Long categoryId = articleListDto.getCategoryId();
+        if(Objects.nonNull(categoryId) && categoryId>0){
+            return articleService.articleListUsingCategoryId(pageNum, pageSize, categoryId);
+        }
+        // 根据标签进行查询
+        Long tagId = articleListDto.getTagId();
+        if(Objects.nonNull(tagId) && tagId>0){
+            return articleService.articleListUsingTagId(pageNum, pageSize, tagId);
+        }
+        //根据内容进行查询
+        String queryContent = articleListDto.getQueryContent();
+        if(StringUtils.hasText(queryContent)){
+            return articleService.articleListUsingQueryContent(pageNum, pageSize, queryContent);
+        }
+        //无特殊参数查询
+        return articleService.articleList(pageNum, pageSize);
     }
 
     @GetMapping("/{id}")

@@ -63,53 +63,17 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     }
 
     @Override
-    public ResponseResult articleList(Integer pageNum, Integer pageSize, ArticleListDto articleListDto) {
+    public ResponseResult articleList(Integer pageNum, Integer pageSize) {
         //1.获取到article
         LambdaQueryWrapper<Article> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        //1.1是否传入正确地categoryId
-        Long categoryId = articleListDto.getCategoryId();
-        lambdaQueryWrapper.eq(Objects.nonNull(categoryId) && categoryId >0,
-                Article::getCategoryId, categoryId);
-        //1.?是否传入正确地tagId
-        Long tagId = articleListDto.getTagId();
-        if(Objects.nonNull(tagId) && tagId >0) {
-            List<Long> articleIds = getArticleIdByTagId(tagId);
-            lambdaQueryWrapper.in(articleIds.size() > 0, Article::getId, articleIds);
-        }
-        //1.?是否正确传入queryContent
-        String queryContent = articleListDto.getQueryContent();
-        lambdaQueryWrapper.like(StringUtils.hasText(queryContent),
-                Article::getContent, queryContent);
         //1.2必须是已发布的文章
         lambdaQueryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
         //1.3对是否置顶进行排序
         lambdaQueryWrapper.orderByDesc(Article::getIsTop);
 
         //2.查询指定页面的article，查找到categoryName和tag
-        //2.1查询指定页面的article
-        Page<Article> page = new Page<>(pageNum, pageSize);
-        page(page, lambdaQueryWrapper);
-        //2.2查找到categoryName
-        List<Article> articles = page.getRecords();
-        List<Article> articleWithCategoryNameList =
-                articles.stream()
-                .peek(article ->
-                        article.setCategoryName(
-                                categoryService.getById(
-                                        article.getCategoryId()).getName()))
-                        .collect(Collectors.toList());
-        //2.3 Tag
-        List<Article> articleWithCategoryNameAndTagList =
-                articleWithCategoryNameList.stream().
-                        peek(article -> {
-                            article.setTagList(
-                                    getTagListByArticleId(article.getId()));
-                        }).collect(Collectors.toList());
-
-        //3.将article封装成articleVo,然后封装成pagevo
-        List<ArticleListVo> articleListVos = BeanCopyUtils.copyBeanList(
-                articleWithCategoryNameAndTagList, ArticleListVo.class);
-        PageVo pageVo = new PageVo(articleListVos, page.getTotal());
+        PageVo pageVo = getPageVoByPageNumAndPageSizeAndLambdaQueryWrapper(
+                pageNum, pageSize, lambdaQueryWrapper);
 
         //4.返回pageVo
         return ResponseResult.okResult(pageVo);
@@ -127,6 +91,87 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             tagArticleDtos = BeanCopyUtils.copyBeanList(tags, TagArticleDto.class);
         }
         return tagArticleDtos;
+    }
+
+    @Override
+    public PageVo getPageVoByPageNumAndPageSizeAndLambdaQueryWrapper(Integer pageNum, Integer pageSize, LambdaQueryWrapper wrapper) {
+        //2.查询指定页面的article，查找到categoryName和tag
+        //2.1查询指定页面的article
+        Page<Article> page = new Page<>(pageNum, pageSize);
+        page(page, wrapper);
+        //2.2查找到categoryName
+        List<Article> articles = page.getRecords();
+        List<Article> articleWithCategoryNameList =
+                articles.stream()
+                        .peek(article ->
+                                article.setCategoryName(
+                                        categoryService.getById(
+                                                article.getCategoryId()).getName()))
+                        .collect(Collectors.toList());
+        //2.3 Tag
+        List<Article> articleWithCategoryNameAndTagList =
+                articleWithCategoryNameList.stream().
+                        peek(article -> {
+                            article.setTagList(
+                                    getTagListByArticleId(article.getId()));
+                        }).collect(Collectors.toList());
+
+        //3.将article封装成articleVo,然后封装成pagevo
+        List<ArticleListVo> articleListVos = BeanCopyUtils.copyBeanList(
+                articleWithCategoryNameAndTagList, ArticleListVo.class);
+        PageVo pageVo = new PageVo(articleListVos, page.getTotal());
+        return pageVo;
+    }
+
+    @Override
+    public ResponseResult articleListUsingCategoryId(Integer pageNum, Integer pageSize, Long categoryId) {
+        //1.获取到article
+        LambdaQueryWrapper<Article> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(Article::getCategoryId, categoryId);
+        //1.2必须是已发布的文章
+        lambdaQueryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
+        //1.3对是否置顶进行排序
+        lambdaQueryWrapper.orderByDesc(Article::getIsTop);
+
+        PageVo pageVo = getPageVoByPageNumAndPageSizeAndLambdaQueryWrapper(
+                pageNum, pageSize, lambdaQueryWrapper
+        );
+
+        return ResponseResult.okResult(pageVo);
+    }
+
+    @Override
+    public ResponseResult articleListUsingTagId(Integer pageNum, Integer pageSize, Long tagId) {
+        //1.获取到article
+        LambdaQueryWrapper<Article> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        List<Long> articleIds = getArticleIdByTagId(tagId);
+        lambdaQueryWrapper.in(articleIds.size() > 0, Article::getId, articleIds);
+        //1.2必须是已发布的文章
+        lambdaQueryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
+        //1.3对是否置顶进行排序
+        lambdaQueryWrapper.orderByDesc(Article::getIsTop);
+
+        PageVo pageVo = getPageVoByPageNumAndPageSizeAndLambdaQueryWrapper(
+                pageNum, pageSize, lambdaQueryWrapper
+        );
+
+        return ResponseResult.okResult(pageVo);
+    }
+
+    @Override
+    public ResponseResult articleListUsingQueryContent(Integer pageNum, Integer pageSize, String queryContent) {
+        LambdaQueryWrapper<Article> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.like(Article::getContent, queryContent);
+        //1.2必须是已发布的文章
+        lambdaQueryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
+        //1.3对是否置顶进行排序
+        lambdaQueryWrapper.orderByDesc(Article::getIsTop);
+
+        PageVo pageVo = getPageVoByPageNumAndPageSizeAndLambdaQueryWrapper(
+                pageNum, pageSize, lambdaQueryWrapper
+        );
+
+        return ResponseResult.okResult(pageVo);
     }
 
     @Override
