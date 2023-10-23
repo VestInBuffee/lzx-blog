@@ -35,4 +35,8 @@ public class SystemConstants {
     public static final String MENU_STATUS_NORMAL = "0";
     public static final String USER_TYPE_ADMIN = "1";
     public static final Object ROLE_STATUS_NORMAL = "0";
+    public static final int ARTICLE_NOTDELETE = 0;
+    public static final String QUEUE_QUERY_BY_CONTENT = "queue_query_content";
+    public static final String EXCHANGE_QUERY = "exchange_query";
+    public static final String ROUTINGKEY_QUERY_BY_CONTENT = "query.content";
 }

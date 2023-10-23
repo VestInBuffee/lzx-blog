@@ -63,6 +63,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
     @Override
     public ResponseResult deleteTag(Long id) {
         removeById(id);
+        getBaseMapper().deleteArticleTagByTagId(id);
         return ResponseResult.okResult();
     }
 

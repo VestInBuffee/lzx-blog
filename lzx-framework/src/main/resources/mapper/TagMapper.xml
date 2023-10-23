@@ -7,4 +7,8 @@
 <!--        FROM `lzx_article_tag`-->
 <!--        WHERE `article_id` = #{articleId}-->
 <!--    </select>-->
+    <delete id="deleteArticleTagByTagId">
+        DELETE FROM lzx_article_tag
+        WHERE tag_id = ${tagId}
+    </delete>
 </mapper>

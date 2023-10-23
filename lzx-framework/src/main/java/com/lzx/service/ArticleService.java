@@ -1,5 +1,6 @@
 package com.lzx.service;
 
+import cn.easyes.core.conditions.LambdaEsQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.lzx.domain.ResponseResult;
@@ -14,7 +15,7 @@ import java.util.List;
 public interface ArticleService extends IService<Article> {
     ResponseResult hotArticleList();
 
-    ResponseResult articleList(Integer pageNum, Integer pageSize);
+    ResponseResult articleList(Integer pageNum, Integer pageSize, ArticleListDto articleListDto);
 
     ResponseResult getArticleDetail(Long id);
 
@@ -29,12 +30,14 @@ public interface ArticleService extends IService<Article> {
     ResponseResult updateArticle(Article article);
 
     ResponseResult deleteOneArticleById(Long id);
-    List<TagArticleDto> getTagListByArticleId(Long id);
-    PageVo getPageVoByPageNumAndPageSizeAndLambdaQueryWrapper(Integer pageNum, Integer pageSize, LambdaQueryWrapper wrapper);
+//    List<TagArticleDto> getTagListByArticleId(Long id);
 
-    ResponseResult articleListUsingCategoryId(Integer pageNum, Integer pageSize, Long categoryId);
+//    PageVo getPageVoByPageNumAndPageSizeAndLambdaEsQueryWrapper(Integer pageNum, Integer pageSize, LambdaEsQueryWrapper wrapper);
+//    PageVo getPageVoByPageNumAndPageSizeAndLambdaQueryWrapper(Integer pageNum, Integer pageSize, LambdaQueryWrapper wrapper);
 
-    ResponseResult articleListUsingTagId(Integer pageNum, Integer pageSize, Long tagId);
+    ResponseResult articleListUsingCategoryId(Integer pageNum, Integer pageSize, ArticleListDto articleListDto);
 
-    ResponseResult articleListUsingQueryContent(Integer pageNum, Integer pageSize, String queryContent);
+    ResponseResult articleListUsingTagId(Integer pageNum, Integer pageSize, ArticleListDto articleListDto);
+
+    ResponseResult articleListUsingQueryContent(Integer pageNum, Integer pageSize, ArticleListDto articleListDto);
 }

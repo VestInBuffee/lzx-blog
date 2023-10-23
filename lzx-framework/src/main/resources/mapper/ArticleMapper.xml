@@ -20,8 +20,25 @@
         WHERE article_id = #{id}
     </select>
     <select id="getArticleIdByTagId" resultType="java.lang.Long">
-        SELECT article_id
-        FROM `lzx_article_tag`
-        WHERE tag_id = #{tagId}
+        SELECT ta.article_id
+        FROM `lzx_article_tag` ta
+                 INNER JOIN (
+                    SELECT id
+                    FROM lzx_article
+                    WHERE del_flag=0 AND status = 0
+                      <if test="articleListDto.lastPageMaxArticleId != null">
+                      AND id>${articleListDto.lastPageMaxArticleId}
+                      </if>
+                    ORDER BY is_top DESC, id) AS a
+                 ON a.id = ta.article_id
+        WHERE ta.tag_id = ${articleListDto.tagId}
+        LIMIT ${pageSize};
     </select>
+<!--    <select id="getArticlePageList" resultType="com.lzx.domain.entity.Article">-->
+<!--        SELECT id,title,content,summary,category_id,thumbnail,is_top,-->
+<!--               status,view_count,is_comment,create_by,create_time,update_by,-->
+<!--               update_time,del_flag-->
+<!--        FROM lzx_article-->
+<!--        ${ew.customSqlSegment}-->
+<!--    </select>-->
 </mapper>

@@ -6,6 +6,7 @@ import com.lzx.domain.dto.ArticleListDto;
 import com.lzx.domain.entity.Article;
 
 import com.lzx.service.ArticleService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -38,20 +39,20 @@ public class ArticleController {
         // 根据类别进行查询
         Long categoryId = articleListDto.getCategoryId();
         if(Objects.nonNull(categoryId) && categoryId>0){
-            return articleService.articleListUsingCategoryId(pageNum, pageSize, categoryId);
+            return articleService.articleListUsingCategoryId(pageNum, pageSize, articleListDto);
         }
         // 根据标签进行查询
         Long tagId = articleListDto.getTagId();
         if(Objects.nonNull(tagId) && tagId>0){
-            return articleService.articleListUsingTagId(pageNum, pageSize, tagId);
+            return articleService.articleListUsingTagId(pageNum, pageSize, articleListDto);
         }
         //根据内容进行查询
         String queryContent = articleListDto.getQueryContent();
         if(StringUtils.hasText(queryContent)){
-            return articleService.articleListUsingQueryContent(pageNum, pageSize, queryContent);
+            return articleService.articleListUsingQueryContent(pageNum, pageSize, articleListDto);
         }
         //无特殊参数查询
-        return articleService.articleList(pageNum, pageSize);
+        return articleService.articleList(pageNum, pageSize, articleListDto);
     }
 
     @GetMapping("/{id}")

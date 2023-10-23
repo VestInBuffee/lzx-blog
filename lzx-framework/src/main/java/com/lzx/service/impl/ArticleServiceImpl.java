@@ -1,6 +1,9 @@
 package com.lzx.service.impl;
 
+import cn.easyes.core.biz.PageInfo;
+import cn.easyes.core.conditions.LambdaEsQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lzx.constants.SystemConstants;
@@ -13,6 +16,7 @@ import com.lzx.domain.entity.Category;
 import com.lzx.domain.entity.Tag;
 import com.lzx.domain.vo.*;
 import com.lzx.mapper.ArticleMapper;
+import com.lzx.mapper.easyes.EsArticleMapper;
 import com.lzx.service.ArticleService;
 import com.lzx.service.CategoryService;
 import com.lzx.service.TagService;
@@ -43,6 +47,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Autowired
     private TagService tagService;
+    @Autowired
+    private EsArticleMapper esArticleMapper;
 
     @Override
     public ResponseResult hotArticleList() {
@@ -63,13 +69,16 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     }
 
     @Override
-    public ResponseResult articleList(Integer pageNum, Integer pageSize) {
+    public ResponseResult articleList(Integer pageNum, Integer pageSize, ArticleListDto articleListDto) {
         //1.获取到article
         LambdaQueryWrapper<Article> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         //1.2必须是已发布的文章
         lambdaQueryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
-        //1.3对是否置顶进行排序
-        lambdaQueryWrapper.orderByDesc(Article::getIsTop);
+        //1.?id需大于上一页的最大id TODO 当两个topId 相差太远， 会损失数据
+        Long lastPageMaxArticleId = articleListDto.getLastPageMaxArticleId();
+        lambdaQueryWrapper.gt(Objects.nonNull(lastPageMaxArticleId) && lastPageMaxArticleId>0
+                , Article::getId, lastPageMaxArticleId);
+        lambdaQueryWrapper.orderByDesc(Article::getIsTop).orderByAsc(Article::getId);
 
         //2.查询指定页面的article，查找到categoryName和tag
         PageVo pageVo = getPageVoByPageNumAndPageSizeAndLambdaQueryWrapper(
@@ -79,11 +88,11 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         return ResponseResult.okResult(pageVo);
     }
 
-    private List<Long> getArticleIdByTagId(Long tagId) {
-        return getBaseMapper().getArticleIdByTagId(tagId);
+    private List<Long> getArticleIdByTagId(Integer pageSize, ArticleListDto articleListDto) {
+        return getBaseMapper().getArticleIdByTagId(pageSize, articleListDto);
     }
 
-    public List<TagArticleDto> getTagListByArticleId(Long id) {
+    private List<TagArticleDto> getTagListByArticleId(Long id) {
         List<Long> tagIds = getBaseMapper().getTagIdByArticleId(id);
         List<TagArticleDto> tagArticleDtos = null;
         if(tagIds.size() > 0){
@@ -93,14 +102,18 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         return tagArticleDtos;
     }
 
-    @Override
-    public PageVo getPageVoByPageNumAndPageSizeAndLambdaQueryWrapper(Integer pageNum, Integer pageSize, LambdaQueryWrapper wrapper) {
-        //2.查询指定页面的article，查找到categoryName和tag
-        //2.1查询指定页面的article
-        Page<Article> page = new Page<>(pageNum, pageSize);
-        page(page, wrapper);
-        //2.2查找到categoryName
-        List<Article> articles = page.getRecords();
+
+    private PageVo getPageVoByPageNumAndPageSizeAndLambdaEsQueryWrapper(Integer pageNum, Integer pageSize, LambdaEsQueryWrapper wrapper) {
+        PageInfo<Article> pageInfo = esArticleMapper.pageQuery(wrapper, pageNum, pageSize);
+        List<Article> articles = pageInfo.getList();
+
+        List<ArticleListVo> articleListVos = getArticleListVosByArticle(articles);
+
+        PageVo pageVo = new PageVo(articleListVos, pageInfo.getTotal());
+        return pageVo;
+    }
+
+    private List<ArticleListVo> getArticleListVosByArticle(List<Article> articles) {
         List<Article> articleWithCategoryNameList =
                 articles.stream()
                         .peek(article ->
@@ -119,19 +132,43 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         //3.将article封装成articleVo,然后封装成pagevo
         List<ArticleListVo> articleListVos = BeanCopyUtils.copyBeanList(
                 articleWithCategoryNameAndTagList, ArticleListVo.class);
+
+        return articleListVos;
+    }
+
+
+
+    private PageVo getPageVoByPageNumAndPageSizeAndLambdaQueryWrapper(Integer pageNum, Integer pageSize, LambdaQueryWrapper wrapper) {
+        //2.查询指定页面的article，查找到categoryName和tag
+        //2.1查询指定页面的article
+        //TODO 不太优雅的代码
+//        IPage<Article> page = new Page<>(1, pageSize);
+//        page = getBaseMapper().getArticlePageList(page, wrapper, pageSize);
+        Page<Article> page = new Page<>(1, pageSize);
+        page(page, wrapper);
+        //2.2查找到categoryName
+        List<Article> articles = page.getRecords();
+
+        //3.将article封装成articleVo,然后封装成pagevo
+        List<ArticleListVo> articleListVos = getArticleListVosByArticle(articles);
+
         PageVo pageVo = new PageVo(articleListVos, page.getTotal());
         return pageVo;
     }
 
     @Override
-    public ResponseResult articleListUsingCategoryId(Integer pageNum, Integer pageSize, Long categoryId) {
+    public ResponseResult articleListUsingCategoryId(Integer pageNum, Integer pageSize, ArticleListDto articleListDto) {
         //1.获取到article
         LambdaQueryWrapper<Article> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(Article::getCategoryId, categoryId);
+        lambdaQueryWrapper.eq(Article::getCategoryId, articleListDto.getCategoryId());
+
         //1.2必须是已发布的文章
         lambdaQueryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
+        Long lastPageMaxArticleId = articleListDto.getLastPageMaxArticleId();
+        lambdaQueryWrapper.gt(Objects.nonNull(lastPageMaxArticleId) && lastPageMaxArticleId>0
+                , Article::getId, lastPageMaxArticleId);
         //1.3对是否置顶进行排序
-        lambdaQueryWrapper.orderByDesc(Article::getIsTop);
+        lambdaQueryWrapper.orderByDesc(Article::getIsTop).orderByAsc(Article::getId);
 
         PageVo pageVo = getPageVoByPageNumAndPageSizeAndLambdaQueryWrapper(
                 pageNum, pageSize, lambdaQueryWrapper
@@ -141,15 +178,12 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     }
 
     @Override
-    public ResponseResult articleListUsingTagId(Integer pageNum, Integer pageSize, Long tagId) {
+    public ResponseResult articleListUsingTagId(Integer pageNum, Integer pageSize, ArticleListDto articleListDto) {
         //1.获取到article
         LambdaQueryWrapper<Article> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        List<Long> articleIds = getArticleIdByTagId(tagId);
+        List<Long> articleIds = getArticleIdByTagId(pageSize, articleListDto);
         lambdaQueryWrapper.in(articleIds.size() > 0, Article::getId, articleIds);
-        //1.2必须是已发布的文章
-        lambdaQueryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
-        //1.3对是否置顶进行排序
-        lambdaQueryWrapper.orderByDesc(Article::getIsTop);
+        //1.?id需大于上一页的最大id TODO 当两个topId 相差太远， 会损失数据
 
         PageVo pageVo = getPageVoByPageNumAndPageSizeAndLambdaQueryWrapper(
                 pageNum, pageSize, lambdaQueryWrapper
@@ -159,16 +193,15 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     }
 
     @Override
-    public ResponseResult articleListUsingQueryContent(Integer pageNum, Integer pageSize, String queryContent) {
-        LambdaQueryWrapper<Article> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.like(Article::getContent, queryContent);
-        //1.2必须是已发布的文章
-        lambdaQueryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
-        //1.3对是否置顶进行排序
-        lambdaQueryWrapper.orderByDesc(Article::getIsTop);
+    public ResponseResult articleListUsingQueryContent(Integer pageNum, Integer pageSize, ArticleListDto articleListDto) {
+        LambdaEsQueryWrapper<Article> wrapper = new LambdaEsQueryWrapper<>();
+        wrapper.match(Article::getContent, articleListDto.getQueryContent());
+        wrapper.eq(Article::getDelFlag, SystemConstants.ARTICLE_NOTDELETE);
+        wrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
+        wrapper.orderByDesc(Article::getIsTop).orderByAsc(Article::getId);
 
-        PageVo pageVo = getPageVoByPageNumAndPageSizeAndLambdaQueryWrapper(
-                pageNum, pageSize, lambdaQueryWrapper
+        PageVo pageVo = getPageVoByPageNumAndPageSizeAndLambdaEsQueryWrapper(
+                pageNum, pageSize, wrapper
         );
 
         return ResponseResult.okResult(pageVo);

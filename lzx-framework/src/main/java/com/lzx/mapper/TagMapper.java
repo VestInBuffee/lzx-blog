@@ -13,6 +13,7 @@ import java.util.List;
  * @since 2023-08-21 16:28:37
  */
 public interface TagMapper extends BaseMapper<Tag> {
+    void deleteArticleTagByTagId(@Param("tagId")Long tagId);
 
 //    List<Long> getTagIdByArticleId(@Param("articleId")Long id);
 }

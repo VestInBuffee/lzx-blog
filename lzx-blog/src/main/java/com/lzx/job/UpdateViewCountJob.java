@@ -24,7 +24,7 @@ public class UpdateViewCountJob {
     private RedisCache redisCache;
     @Autowired
     private ArticleService articleService;
-    @Scheduled(cron = "0 0/10 * * * ?")
+    @Scheduled(cron = "0 0 0/1 * * ?")
     @Transactional(rollbackFor = Exception.class)
     public void updateViewCount(){
         //从redis中获取viewCount

@@ -7,20 +7,19 @@ import com.lzx.constants.SystemConstants;
 import com.lzx.domain.ResponseResult;
 import com.lzx.domain.dto.ListCategoryDto;
 import com.lzx.domain.dto.UpdateCategoryDto;
-import com.lzx.domain.entity.Article;
+
 import com.lzx.domain.entity.Category;
 import com.lzx.domain.vo.*;
 import com.lzx.mapper.CategoryMapper;
-import com.lzx.service.ArticleService;
+
 import com.lzx.service.CategoryService;
 import com.lzx.utils.BeanCopyUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
+
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
-import java.util.Set;
+
 import java.util.stream.Collectors;
 
 /**
@@ -32,34 +31,39 @@ import java.util.stream.Collectors;
 @Service("categoryService")
 public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> implements CategoryService {
 
-    @Autowired
-    ArticleService articleService;
+//    @Autowired
+//    ArticleService articleService;
     @Override
     public ResponseResult getCategoryList() {
-        //1.查找到article表中已发布的文章,获取到类别id，并去重
-        //1.1查找到article表中已发布的文章
-        LambdaQueryWrapper<Article> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
-        List<Article> articleList = articleService.list(lambdaQueryWrapper);
-        //1.2获取到类别id，并去重
-        Set<Long> categoryIdSet = articleList.stream()
-                //1.2.2获取到类别id
-                .map(article -> article.getCategoryId())
-                //1.2.2去重
-                .collect(Collectors.toSet());
-
-
-        //2.用已发布的文章类别id，去查询category表，查询到的category的status必须为启用
-        //2.1用已发布的文章类别id，去查询category表
-        List<Category> categoryList = listByIds(categoryIdSet);
-        //2.2查询到的category的status必须为启用
-        categoryList.stream()
+        List<Category> categoryList = list();
+        List<Category> categoryListWithNormalStatus = categoryList.stream()
                 .filter(category ->
                         SystemConstants.CATEGORY_STATUS_NORMAL.equals(category.getStatus()))
                 .collect(Collectors.toList());
-        //3.
+//        //1.查找到article表中已发布的文章,获取到类别id，并去重
+//        //1.1查找到article表中已发布的文章
+//        LambdaQueryWrapper<Article> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+//        lambdaQueryWrapper.eq(Article::getStatus, SystemConstants.ARTICLE_STATUS_NORMAL);
+//        List<Article> articleList = articleService.list(lambdaQueryWrapper);
+//        //1.2获取到类别id，并去重
+//        Set<Long> categoryIdSet = articleList.stream()
+//                //1.2.2获取到类别id
+//                .map(article -> article.getCategoryId())
+//                //1.2.2去重
+//                .collect(Collectors.toSet());
+//
+//
+//        //2.用已发布的文章类别id，去查询category表，查询到的category的status必须为启用
+//        //2.1用已发布的文章类别id，去查询category表
+//        List<Category> categoryList = listByIds(categoryIdSet);
+//        //2.2查询到的category的status必须为启用
+//        categoryList.stream()
+//                .filter(category ->
+//                        SystemConstants.CATEGORY_STATUS_NORMAL.equals(category.getStatus()))
+//                .collect(Collectors.toList());
+//        //3.
         List<CategoryVo> categoryVos =
-                BeanCopyUtils.copyBeanList(categoryList, CategoryVo.class);
+                BeanCopyUtils.copyBeanList(categoryListWithNormalStatus, CategoryVo.class);
         return ResponseResult.okResult(categoryVos);
     }
 
