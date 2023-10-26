@@ -80,9 +80,13 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                 , Article::getId, lastPageMaxArticleId);
         lambdaQueryWrapper.orderByDesc(Article::getIsTop).orderByAsc(Article::getId);
 
-        //2.查询指定页面的article，查找到categoryName和tag
-        PageVo pageVo = getPageVoByPageNumAndPageSizeAndLambdaQueryWrapper(
-                pageNum, pageSize, lambdaQueryWrapper);
+        Page<Article> page = new Page<>(1, pageSize);
+        page(page, lambdaQueryWrapper);
+
+        List<Article> articles = page.getRecords();
+        Long total = page.getTotal();
+
+        PageVo pageVo = getPageVoByArticleAndTotal(articles, total);
 
         //4.返回pageVo
         return ResponseResult.okResult(pageVo);
@@ -136,26 +140,6 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         return articleListVos;
     }
 
-
-
-    private PageVo getPageVoByPageNumAndPageSizeAndLambdaQueryWrapper(Integer pageNum, Integer pageSize, LambdaQueryWrapper wrapper) {
-        //2.查询指定页面的article，查找到categoryName和tag
-        //2.1查询指定页面的article
-        //TODO 不太优雅的代码
-//        IPage<Article> page = new Page<>(1, pageSize);
-//        page = getBaseMapper().getArticlePageList(page, wrapper, pageSize);
-        Page<Article> page = new Page<>(1, pageSize);
-        page(page, wrapper);
-        //2.2查找到categoryName
-        List<Article> articles = page.getRecords();
-
-        //3.将article封装成articleVo,然后封装成pagevo
-        List<ArticleListVo> articleListVos = getArticleListVosByArticle(articles);
-
-        PageVo pageVo = new PageVo(articleListVos, page.getTotal());
-        return pageVo;
-    }
-
     @Override
     public ResponseResult articleListUsingCategoryId(Integer pageNum, Integer pageSize, ArticleListDto articleListDto) {
         //1.获取到article
@@ -170,9 +154,13 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         //1.3对是否置顶进行排序
         lambdaQueryWrapper.orderByDesc(Article::getIsTop).orderByAsc(Article::getId);
 
-        PageVo pageVo = getPageVoByPageNumAndPageSizeAndLambdaQueryWrapper(
-                pageNum, pageSize, lambdaQueryWrapper
-        );
+        Page<Article> page = new Page<>(1, pageSize);
+        page(page, lambdaQueryWrapper);
+
+        List<Article> articles = page.getRecords();
+        Long total = page.getTotal();
+
+        PageVo pageVo = getPageVoByArticleAndTotal(articles, total);
 
         return ResponseResult.okResult(pageVo);
     }
@@ -180,16 +168,30 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     @Override
     public ResponseResult articleListUsingTagId(Integer pageNum, Integer pageSize, ArticleListDto articleListDto) {
         //1.获取到article
-        LambdaQueryWrapper<Article> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<Article> wrapper = new LambdaQueryWrapper<>();
         List<Long> articleIds = getArticleIdByTagId(pageSize, articleListDto);
-        lambdaQueryWrapper.in(articleIds.size() > 0, Article::getId, articleIds);
+        wrapper.in(articleIds.size() > 0, Article::getId, articleIds);
         //1.?id需大于上一页的最大id TODO 当两个topId 相差太远， 会损失数据
 
-        PageVo pageVo = getPageVoByPageNumAndPageSizeAndLambdaQueryWrapper(
-                pageNum, pageSize, lambdaQueryWrapper
-        );
+        Page<Article> page = new Page<>(1, pageSize);
+        page(page, wrapper);
+
+        List<Article> articles = page.getRecords();
+        Long total = getTotalByArticleAndTag(articleListDto);
+
+        PageVo pageVo = getPageVoByArticleAndTotal(articles, total);
 
         return ResponseResult.okResult(pageVo);
+    }
+
+    private PageVo getPageVoByArticleAndTotal(List<Article> articles, Long total) {
+        List<ArticleListVo> articleListVos = getArticleListVosByArticle(articles);
+        PageVo pageVo = new PageVo(articleListVos, total);
+        return pageVo;
+    }
+
+    private Long getTotalByArticleAndTag(ArticleListDto articleListDto) {
+        return getBaseMapper().getTotalByArticleAndTag(articleListDto);
     }
 
     @Override
@@ -201,8 +203,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         wrapper.orderByDesc(Article::getIsTop).orderByAsc(Article::getId);
 
         PageVo pageVo = getPageVoByPageNumAndPageSizeAndLambdaEsQueryWrapper(
-                pageNum, pageSize, wrapper
-        );
+                pageNum, pageSize, wrapper);
 
         return ResponseResult.okResult(pageVo);
     }
@@ -232,7 +233,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     public ResponseResult updateViewCount(String id) {
         redisCache.incrementCacheMapValue(SystemConstants.ARTICLE_VIEWCOUNT_REDIS_KEY,
                 id, 1);
-        return null;
+        return ResponseResult.okResult();
     }
 
     @Override

@@ -25,4 +25,6 @@ public interface ArticleMapper extends BaseMapper<Article> {
 
     List<Long> getArticleIdByTagId(@Param("pageSize")Integer pageSize,
                                    @Param("articleListDto")ArticleListDto articleListDto);
+
+    Long getTotalByArticleAndTag(@Param("articleListDto")ArticleListDto articleListDto);
 }

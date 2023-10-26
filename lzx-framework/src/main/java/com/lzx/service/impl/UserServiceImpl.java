@@ -90,7 +90,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userUpdate.setNickName(nickName);
         userUpdate.setSex(sex);
         //3.3存储到redis中
-        redisCache.setCacheObject("bloglogin:" + id, loginUser);
+        redisCache.setCacheObject("bloglogin:" + id, userUpdate);
 
         //返回
         return ResponseResult.okResult("更新成功");

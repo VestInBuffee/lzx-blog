@@ -27,6 +27,7 @@ public class UpdateViewCountJob {
     @Scheduled(cron = "0 0 0/1 * * ?")
     @Transactional(rollbackFor = Exception.class)
     public void updateViewCount(){
+        System.out.println("-------------update viewCount start------");
         //从redis中获取viewCount
         Map<String, Integer> map = redisCache.getCacheMap(
                 SystemConstants.ARTICLE_VIEWCOUNT_REDIS_KEY);
@@ -36,6 +37,8 @@ public class UpdateViewCountJob {
                         entry.getValue().longValue())).
                 collect(Collectors.toList());
         //更新数据库
-         articleService.updateBatchById(articles);
+        articleService.updateBatchById(articles);
+        System.out.println("-------------update viewCount finish------");
+
     }
 }

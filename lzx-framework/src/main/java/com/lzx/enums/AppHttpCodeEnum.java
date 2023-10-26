@@ -18,6 +18,7 @@ public enum AppHttpCodeEnum {
     EMAIL_NOT_NULL(511, "邮箱不能为空"),
     NICKNAME_EXIST(512, "昵称已存在"),
     LOGIN_ERROR(505,"用户名或密码错误"),
+    UPDATE_OTHER_USERINFO(513, "请勿尝试更新其他用户信息"),
     MENU_PARENTID_CANNOT_EQUAL_SELFID(500, "修改菜单失败，上级菜单不能是自己"),
     MENU_HAS_CHILD_MENU(500, "存在子菜单不允许删除");
     int code;

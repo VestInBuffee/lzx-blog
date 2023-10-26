@@ -22,7 +22,11 @@ public class ViewCountRunner implements CommandLineRunner {
     
     @Override
     public void run(String... args) throws Exception {
-        // TODO
+        initArticleViewCount();
+    }
+
+    private void initArticleViewCount(){
+        System.out.println("-------init article viewCount start--------");
         //从数据库获取Article数据
         List<Article> articles = articleMapper.selectList(null);
         //提取Id，viewCount列，存储到map中
@@ -31,9 +35,7 @@ public class ViewCountRunner implements CommandLineRunner {
                         article -> article.getViewCount().intValue()));
         //存入redis
         redisCache.setCacheMap(SystemConstants.ARTICLE_VIEWCOUNT_REDIS_KEY, map);
-        setTagArticleCountMap();
+        System.out.println("-------init article viewCount finish--------");
     }
-    private void setTagArticleCountMap(){
-        //从获取所有文章的tagId
-    }
+
 }
